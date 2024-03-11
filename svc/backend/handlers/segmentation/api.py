@@ -12,4 +12,4 @@ def get_segmented_image():
     image = decode(request.json['Image'])
     segmentation = model.segment(image=image, cmap=request.json['ColorMapping'])
     string = base64.b64encode(cv2.imencode('.jpg', segmentation)[1]).decode()
-    return {'Segmantation': string}, 200
+    return {'Segmentation': string}, 200

@@ -8,18 +8,22 @@ from PyQt6.QtWidgets import (
     QWidget,
     QPushButton
 )
-from PyQt6.QtGui import QAction, QPixmap
+from PyQt6.QtGui import QAction, QPixmap, QImage
+from typing import Callable
 import pathlib
-from PIL import Image
-from .utils import load_image
+from .request import get_segmentation
+from .utils import load_color_mapping
 
 
 class MainWindow(QMainWindow):
     def __init__(self, title: str='FaceDesigner 🔥') -> None:
         super(MainWindow, self).__init__()
+        self.nopicture_path = pathlib.Path('svc', 'frontend', 'icons', 'nopicture.jpg')
         self.setWindowTitle(title)
         self._add_toolbar()
         self.images = self._add_layout()
+        self.is_segmentation_generated = False
+        self.current_image_path = self.nopicture_path
 
     def _load_image(self, event) -> None:
         path = QFileDialog.getOpenFileName(
@@ -27,8 +31,11 @@ class MainWindow(QMainWindow):
             caption='Open image',
             directory='.'
         )[0]
+        self.current_image_path = path
         if path != '':
             self.images['image'].setPixmap(QPixmap(path))
+            self.images['segmentation'].setPixmap(QPixmap(str(self.nopicture_path)))
+            self.is_segmentation_generated = False
 
     def _create_open_button(self, toolbar: QToolBar) -> QAction:
         button = QAction('Open', toolbar)
@@ -62,20 +69,36 @@ class MainWindow(QMainWindow):
         main_widget = QWidget(parent)
         main_widget.setLayout(layout)
         return main_widget
+    
+    
+    def _create_push_button(self, text: str, slot: Callable) -> QPushButton:
+        button = QPushButton(text, self)
+        button.clicked.connect(slot=slot)
+        return button
+    
+    def _update_segmentation(self, event) -> None:
+        segmentation_image = get_segmentation(
+                        image_path=self.current_image_path,
+                        color_mapping=load_color_mapping(path=pathlib.Path('svc', 'frontend', 'settings', 'color_mapping.json')),
+                        url='http://localhost:5050/segmentation/image')
+        height, width, _ = segmentation_image.shape
+        qSegmentationImage = QImage(
+            segmentation_image.data, width, height, 3 * width, QImage.Format.Format_RGB888).rgbSwapped()
+        self.images['segmentation'].setPixmap(QPixmap(qSegmentationImage))
+        self.is_segmentation_generated = True
 
     def _add_layout(self) -> dict[QLabel]:
-        nopicture_path = pathlib.Path('svc', 'frontend', 'icons', 'nopicture.jpg')
         result = dict()
         image_widget_0, image = self._instantiate_image_widget(self, QVBoxLayout(), label='Image:',
-                                                        image_path=str(nopicture_path))
+                                                        image_path=str(self.nopicture_path))
         image_widget_1, segmentation = self._instantiate_image_widget(self, QVBoxLayout(), label='Segmentation:',
-                                                        image_path=str(nopicture_path))
+                                                        image_path=str(self.nopicture_path))
         images = self._instantiate_widget(self, QHBoxLayout(), [image_widget_0, image_widget_1])
         central_widget = self._instantiate_widget(self, QVBoxLayout(), 
                                                   [
                                                       images,
-                                                      QPushButton('Edit Segmentation Map', self),
-                                                      QPushButton('Generate', self)
+                                                      self._create_push_button('Generate Segmentation Map', slot=self._update_segmentation),
+                                                      QPushButton('Edit Segmentation Map', self)
                                                 ])
         self.setCentralWidget(central_widget)
         result['image'] = image
