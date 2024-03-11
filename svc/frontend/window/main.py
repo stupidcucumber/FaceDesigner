@@ -13,6 +13,7 @@ from typing import Callable
 import pathlib
 from .request import get_segmentation
 from .utils import load_color_mapping
+from .image import cv2qimage, instantiate_qimage, instantiate_label_image
 
 
 class MainWindow(QMainWindow):
@@ -33,8 +34,12 @@ class MainWindow(QMainWindow):
         )[0]
         self.current_image_path = path
         if path != '':
-            self.images['image'].setPixmap(QPixmap(path))
-            self.images['segmentation'].setPixmap(QPixmap(str(self.nopicture_path)))
+            self.images['image'].setPixmap(QPixmap(
+                instantiate_qimage(path=path, dsize=(512, 512))
+            ))
+            self.images['segmentation'].setPixmap(QPixmap(
+                instantiate_qimage(path=self.nopicture_path, dsize=(512, 512))
+            ))
             self.is_segmentation_generated = False
 
     def _create_open_button(self, toolbar: QToolBar) -> QAction:
@@ -52,16 +57,6 @@ class MainWindow(QMainWindow):
             ]
         )
         self.addToolBar(toolbar)
-
-    def _instantiate_image_widget(self, parent, layout, label: str, image_path: str) -> QWidget:
-        title = QLabel(label, parent)
-        image = QLabel(parent)
-        image.setPixmap(QPixmap(image_path))
-        layout.addWidget(title)
-        layout.addWidget(image)
-        widget = QWidget(parent)
-        widget.setLayout(layout)
-        return widget, image
     
     def _instantiate_widget(self, parent, layout, widgets: list[QWidget]) -> QWidget:
         for widget in widgets:
@@ -70,37 +65,48 @@ class MainWindow(QMainWindow):
         main_widget.setLayout(layout)
         return main_widget
     
-    
     def _create_push_button(self, text: str, slot: Callable) -> QPushButton:
         button = QPushButton(text, self)
         button.clicked.connect(slot=slot)
         return button
     
     def _update_segmentation(self, event) -> None:
-        segmentation_image = get_segmentation(
-                        image_path=self.current_image_path,
-                        color_mapping=load_color_mapping(path=pathlib.Path('svc', 'frontend', 'settings', 'color_mapping.json')),
-                        url='http://localhost:5050/segmentation/image')
-        height, width, _ = segmentation_image.shape
-        qSegmentationImage = QImage(
-            segmentation_image.data, width, height, 3 * width, QImage.Format.Format_RGB888).rgbSwapped()
-        self.images['segmentation'].setPixmap(QPixmap(qSegmentationImage))
-        self.is_segmentation_generated = True
+        if not self.is_segmentation_generated:
+            segmentation_image = get_segmentation(
+                            image_path=self.current_image_path,
+                            color_mapping=load_color_mapping(path=pathlib.Path('svc', 'frontend', 'settings', 'color_mapping.json')),
+                            url='http://localhost:5050/segmentation/image')
+            self.images['segmentation'].setPixmap(QPixmap(cv2qimage(segmentation_image, dsize=(512, 512))))
+            self.is_segmentation_generated = True
 
     def _add_layout(self) -> dict[QLabel]:
         result = dict()
-        image_widget_0, image = self._instantiate_image_widget(self, QVBoxLayout(), label='Image:',
-                                                        image_path=str(self.nopicture_path))
-        image_widget_1, segmentation = self._instantiate_image_widget(self, QVBoxLayout(), label='Segmentation:',
-                                                        image_path=str(self.nopicture_path))
+        result['image'] = instantiate_label_image(path=self.nopicture_path, parent=self,
+                                                  dsize=(512, 512))
+        result['segmentation'] = instantiate_label_image(path=self.nopicture_path, parent=self,
+                                                         dsize=(512, 512))
+        image_widget_0 = self._instantiate_widget(
+            parent=self,
+            layout=QVBoxLayout(),
+            widgets=[
+                QLabel('Image:', self),
+                result['image']
+            ]
+        )
+        image_widget_1 = self._instantiate_widget(
+            parent=self,
+            layout=QVBoxLayout(),
+            widgets=[
+                QLabel('Segmentation:', self),
+                result['segmentation']
+            ]
+        )
         images = self._instantiate_widget(self, QHBoxLayout(), [image_widget_0, image_widget_1])
         central_widget = self._instantiate_widget(self, QVBoxLayout(), 
                                                   [
                                                       images,
                                                       self._create_push_button('Generate Segmentation Map', slot=self._update_segmentation),
-                                                      QPushButton('Edit Segmentation Map', self)
+                                                      self._create_push_button('Edit Segmentation Map', slot=lambda event: print(event))
                                                 ])
         self.setCentralWidget(central_widget)
-        result['image'] = image
-        result['segmentation'] = segmentation
         return result

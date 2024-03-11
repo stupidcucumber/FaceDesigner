@@ -1,7 +1,7 @@
 import requests
 import pathlib
 import cv2
-from .utils import decode_image, encode_image
+from .image import decode_image, encode_image
 
 
 def get_segmentation(image_path: pathlib.Path, color_mapping: dict, url: str) -> cv2.Mat:

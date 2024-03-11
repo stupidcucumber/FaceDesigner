@@ -1,7 +1,8 @@
 import base64, pathlib
 import numpy as np
 import cv2
-from PyQt6.QtGui import QImage
+from PyQt6.QtGui import QImage, QPixmap
+from PyQt6.QtWidgets import QLabel
 
 
 def decode_image(image: str) -> cv2.Mat:
@@ -19,6 +20,11 @@ def cv2qimage(image: cv2.Mat, dsize: tuple | None = None) -> QImage:
     height, width, _ = image.shape
     return QImage(image.data, width, height, 3 * width, QImage.Format.Format_RGB888).rgbSwapped()
 
-def instantiate_qimage(path: pathlib.Path, dsize: tuple | None = None) -> QImage:
-    image = cv2.imread(path)
+def instantiate_qimage(path: str | pathlib.Path, dsize: tuple | None = None) -> QImage:
+    image = cv2.imread(str(path))
     return cv2qimage(image=image, dsize=dsize)
+
+def instantiate_label_image(path: str | pathlib.Path, parent, dsize: tuple | None = None) -> QLabel:
+    label = QLabel(parent)
+    label.setPixmap(QPixmap(instantiate_qimage(path=path, dsize=dsize)))
+    return label
