@@ -11,9 +11,9 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QAction, QPixmap, QImage
 from typing import Callable
 import pathlib
-from .request import get_segmentation
-from .utils import load_color_mapping
-from .image import cv2qimage, instantiate_qimage, instantiate_label_image
+from ..utils.request import get_segmentation
+from ..settings.utils import load_color_mapping
+from ..utils.image import cv2qimage, instantiate_qimage, instantiate_label_image
 
 
 class MainWindow(QMainWindow):
