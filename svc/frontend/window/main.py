@@ -30,7 +30,7 @@ class MainWindow(QMainWindow):
         self.current_image_path = self.nopicture_path
 
     def open_editor(self, event) -> None:
-        self.editor_window = EditorWindow(pixmap=self.images['segmentation'].pixmap(),
+        self.editor_window = EditorWindow(image_label=self.images['segmentation'],
                                           color_mapping=self.color_mapping)
         self.editor_window.show()
 

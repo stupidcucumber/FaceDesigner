@@ -3,7 +3,8 @@ from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtWidgets import (
     QMainWindow,
     QPushButton,
-    QSlider
+    QSlider,
+    QLabel
 )
 from PyQt6.QtGui import (
     QPixmap,
@@ -14,10 +15,11 @@ from ..widgets import Canvas, ColorButton
 
 
 class EditorWindow(QMainWindow):
-    def __init__(self, pixmap: QPixmap | None = None, color_mapping: dict = None) -> None:
+    def __init__(self, image_label: QLabel | None = None, color_mapping: dict = None) -> None:
         super(EditorWindow, self).__init__()
-        self.original_pixmap = pixmap
-        self.canvas = Canvas(initial_pixmap=pixmap, size=QSize(640, 640))
+        self.image_label = image_label
+        self.original_pixmap = image_label.pixmap()
+        self.canvas = Canvas(initial_pixmap=image_label.pixmap(), size=QSize(640, 640))
         self.color_mapping = color_mapping
         self._setup_layout()
         self.setWindowTitle('Segmentation Editor')
@@ -50,12 +52,19 @@ class EditorWindow(QMainWindow):
         action = QAction(title, self)
         action.triggered.connect(slot)
         return action
-
+    
+    def _save(self):
+        original_size = self.image_label.pixmap().size()
+        edited_pixmap = self.canvas.pixmap().scaled(original_size,
+                                                    Qt.AspectRatioMode.KeepAspectRatio, 
+                                                    Qt.TransformationMode.FastTransformation)
+        self.image_label.setPixmap(edited_pixmap)
+        self.close()
 
     def _setup_layout(self) -> None:
         add_toolbar(parent=self, items=[
-            QAction('Save', self),
-            QAction('Export', self),
+            self._setup_action(title='Save', slot=lambda event: self._save()),
+            self._setup_action(title='Export', slot=lambda event: print(event)),
             self._setup_action(title='Reset', slot=lambda event: self.canvas.setPixmap(self.original_pixmap))
         ])
         add_toolbar(parent=self, items=self._setup_painting_tools(), 
