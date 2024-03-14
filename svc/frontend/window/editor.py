@@ -4,7 +4,8 @@ from PyQt6.QtWidgets import (
     QMainWindow,
     QPushButton,
     QSlider,
-    QLabel
+    QLabel,
+    QFileDialog
 )
 from PyQt6.QtGui import (
     QPixmap,
@@ -61,10 +62,21 @@ class EditorWindow(QMainWindow):
         self.image_label.setPixmap(edited_pixmap)
         self.close()
 
+    def _export(self):
+        path = QFileDialog.getSaveFileName(self,
+                                          caption='Save altered segmentation map.',
+                                          directory='.')[0]
+        original_size = self.image_label.pixmap().size()
+        edited_pixmap = self.canvas.pixmap().scaled(original_size,
+                                                    Qt.AspectRatioMode.KeepAspectRatio, 
+                                                    Qt.TransformationMode.FastTransformation)
+        edited_pixmap.save(path + '.png', format='png')
+
+
     def _setup_layout(self) -> None:
         add_toolbar(parent=self, items=[
             self._setup_action(title='Save', slot=lambda event: self._save()),
-            self._setup_action(title='Export', slot=lambda event: print(event)),
+            self._setup_action(title='Export', slot=lambda event: self._export()),
             self._setup_action(title='Reset', slot=lambda event: self.canvas.setPixmap(self.original_pixmap))
         ])
         add_toolbar(parent=self, items=self._setup_painting_tools(), 
