@@ -14,6 +14,7 @@ import pathlib
 from ..utils.request import get_segmentation
 from ..settings.utils import load_color_mapping
 from ..utils.image import cv2qimage, instantiate_qimage, instantiate_label_image
+from .editor import EditorWindow
 
 
 class MainWindow(QMainWindow):
@@ -23,8 +24,13 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(title)
         self._add_toolbar()
         self.images = self._add_layout()
+        self.editor_window = None
         self.is_segmentation_generated = False
         self.current_image_path = self.nopicture_path
+
+    def open_editor(self, event) -> None:
+        self.editor_window = EditorWindow(canvas=self.images['segmentation'].pixmap())
+        self.editor_window.show()
 
     def _load_image(self, event) -> None:
         path = QFileDialog.getOpenFileName(
@@ -106,7 +112,7 @@ class MainWindow(QMainWindow):
                                                   [
                                                       images,
                                                       self._create_push_button('Generate Segmentation Map', slot=self._update_segmentation),
-                                                      self._create_push_button('Edit Segmentation Map', slot=lambda event: print(event))
+                                                      self._create_push_button('Edit Segmentation Map', slot=self.open_editor)
                                                 ])
         self.setCentralWidget(central_widget)
         return result

@@ -13,5 +13,5 @@ def add_toolbar(parent: QMainWindow, actions: Iterable,
     '''
     toolbar = QToolBar(parent)
     toolbar.addActions(actions)
-    parent.addToolBar(area=area, toolbar=toolbar)
+    parent.addToolBar(area, toolbar)
     return toolbar
