@@ -21,6 +21,7 @@ class MainWindow(QMainWindow):
     def __init__(self, title: str='FaceDesigner 🔥') -> None:
         super(MainWindow, self).__init__()
         self.nopicture_path = pathlib.Path('svc', 'frontend', 'icons', 'nopicture.jpg')
+        self.color_mapping = load_color_mapping(path=pathlib.Path('svc', 'frontend', 'settings', 'color_mapping.json'))
         self.setWindowTitle(title)
         self._add_toolbar()
         self.images = self._add_layout()
@@ -29,7 +30,8 @@ class MainWindow(QMainWindow):
         self.current_image_path = self.nopicture_path
 
     def open_editor(self, event) -> None:
-        self.editor_window = EditorWindow(pixmap=self.images['segmentation'].pixmap())
+        self.editor_window = EditorWindow(pixmap=self.images['segmentation'].pixmap(),
+                                          color_mapping=self.color_mapping)
         self.editor_window.show()
 
     def _load_image(self, event) -> None:
@@ -80,7 +82,7 @@ class MainWindow(QMainWindow):
         if not self.is_segmentation_generated:
             segmentation_image = get_segmentation(
                             image_path=self.current_image_path,
-                            color_mapping=load_color_mapping(path=pathlib.Path('svc', 'frontend', 'settings', 'color_mapping.json')),
+                            color_mapping=self.color_mapping,
                             url='http://localhost:5050/segmentation/image')
             self.images['segmentation'].setPixmap(QPixmap(cv2qimage(segmentation_image, dsize=(512, 512))))
             self.is_segmentation_generated = True
