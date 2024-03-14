@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (
     QWidget,
     QPushButton
 )
-from PyQt6.QtGui import QAction, QPixmap, QImage
+from PyQt6.QtGui import QAction, QPixmap
 from typing import Callable
 import pathlib
 from ..utils.request import get_segmentation
@@ -29,7 +29,7 @@ class MainWindow(QMainWindow):
         self.current_image_path = self.nopicture_path
 
     def open_editor(self, event) -> None:
-        self.editor_window = EditorWindow(canvas=self.images['segmentation'].pixmap())
+        self.editor_window = EditorWindow(pixmap=self.images['segmentation'].pixmap())
         self.editor_window.show()
 
     def _load_image(self, event) -> None:
