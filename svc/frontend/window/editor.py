@@ -1,3 +1,4 @@
+from typing import Callable
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtWidgets import (
     QMainWindow,
@@ -15,6 +16,7 @@ from ..widgets import Canvas, ColorButton
 class EditorWindow(QMainWindow):
     def __init__(self, pixmap: QPixmap | None = None, color_mapping: dict = None) -> None:
         super(EditorWindow, self).__init__()
+        self.original_pixmap = pixmap
         self.canvas = Canvas(initial_pixmap=pixmap, size=QSize(640, 640))
         self.color_mapping = color_mapping
         self._setup_layout()
@@ -43,12 +45,18 @@ class EditorWindow(QMainWindow):
             *self._setup_color_buttons()
         ]
         return widgets
+    
+    def _setup_action(self, title: str, slot: Callable) -> QAction:
+        action = QAction(title, self)
+        action.triggered.connect(slot)
+        return action
+
 
     def _setup_layout(self) -> None:
         add_toolbar(parent=self, items=[
             QAction('Save', self),
             QAction('Export', self),
-            QAction('Reset', self)
+            self._setup_action(title='Reset', slot=lambda event: self.canvas.setPixmap(self.original_pixmap))
         ])
         add_toolbar(parent=self, items=self._setup_painting_tools(), 
                                  area=Qt.ToolBarArea.LeftToolBarArea)

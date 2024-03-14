@@ -12,6 +12,7 @@ from PyQt6.QtGui import (
 class Canvas(QLabel):
     def __init__(self, initial_pixmap: QPixmap | None = None, size: QSize | None = QSize(512, 512)) -> None:
         super(Canvas, self).__init__()
+        self.canvas_size = size
         if initial_pixmap:
             self.setPixmap(initial_pixmap.scaled(size, 
                                                  Qt.AspectRatioMode.KeepAspectRatio, 
@@ -23,6 +24,11 @@ class Canvas(QLabel):
             self.setPixmap(pixmap)
         self.last_point = None
         self.pen = QPen()
+
+    def setPixmap(self, pixmap: QPixmap) -> None:
+        return super().setPixmap(pixmap.scaled(self.canvas_size, 
+                                                 Qt.AspectRatioMode.KeepAspectRatio, 
+                                                 Qt.TransformationMode.FastTransformation))
 
     def set_pen_width(self, size: int) -> None:
         self.pen.setWidth(size)
