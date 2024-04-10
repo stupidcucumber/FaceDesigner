@@ -1,8 +1,6 @@
 from PyQt6.QtWidgets import (
     QMainWindow,
-    QLabel,
-    QWidget,
-    QVBoxLayout
+    QLabel
 )
 from PyQt6.QtGui import (
     QImage,

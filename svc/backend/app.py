@@ -1,8 +1,10 @@
 from flask import Flask
-from handlers.segmentation.api import segment
+from handlers.segmentation import segment
+from handlers.gan import gan
 
 app = Flask(__name__)
 app.register_blueprint(segment, url_prefix='/segmentation')
+app.register_blueprint(gan, url_prefix='/gan')
 
 
 @app.get('/')

@@ -90,7 +90,9 @@ class MainWindow(QMainWindow):
             self.is_segmentation_generated = True
 
     def generate_image(self, event) -> None:
-        self.preview_window = PreviewWindow(qimage=self.images['segmentation'].pixmap().toImage())
+        image = self.images['image'].pixmap().toImage()
+        segmentation = self.images['segmentation'].pixmap().toImage()
+        self.preview_window = PreviewWindow(qimage=image)
         self.preview_window.show()
 
     def _add_layout(self) -> dict[QLabel]:
