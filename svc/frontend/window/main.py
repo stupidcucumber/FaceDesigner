@@ -15,6 +15,7 @@ from ..utils.request import get_segmentation
 from ..settings.utils import load_color_mapping
 from ..utils.image import cv2qimage, instantiate_qimage, instantiate_label_image
 from .editor import EditorWindow
+from .preview import PreviewWindow
 
 
 class MainWindow(QMainWindow):
@@ -26,6 +27,7 @@ class MainWindow(QMainWindow):
         self._add_toolbar()
         self.images = self._add_layout()
         self.editor_window = None
+        self.preview_window = None
         self.is_segmentation_generated = False
         self.current_image_path = self.nopicture_path
 
@@ -87,6 +89,10 @@ class MainWindow(QMainWindow):
             self.images['segmentation'].setPixmap(QPixmap(cv2qimage(segmentation_image, dsize=(512, 512))))
             self.is_segmentation_generated = True
 
+    def generate_image(self, event) -> None:
+        self.preview_window = PreviewWindow(qimage=self.images['segmentation'].pixmap().toImage())
+        self.preview_window.show()
+
     def _add_layout(self) -> dict[QLabel]:
         result = dict()
         result['image'] = instantiate_label_image(path=self.nopicture_path, parent=self,
@@ -114,7 +120,8 @@ class MainWindow(QMainWindow):
                                                   [
                                                       images,
                                                       self._create_push_button('Generate Segmentation Map', slot=self._update_segmentation),
-                                                      self._create_push_button('Edit Segmentation Map', slot=self.open_editor)
+                                                      self._create_push_button('Edit Segmentation Map', slot=self.open_editor),
+                                                      self._create_push_button('Generate Image', slot=self.generate_image)
                                                 ])
         self.setCentralWidget(central_widget)
         return result
