@@ -1,0 +1,6 @@
+services:
+  backend-svc:
+    build: ./svc/backend
+    ports:
+      - "5050:5050"
+    
